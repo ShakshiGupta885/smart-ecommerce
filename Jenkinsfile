@@ -1,4 +1,4 @@
-﻿pipeline {
+pipeline {
     agent any
 
     tools {
@@ -31,7 +31,7 @@
         stage('Build Docker Image') {
             steps {
                 dir('user-service') {
-                    sh 'docker build -t user-service:${BUILD_NUMBER} .'
+                    sh 'docker build -t user-service:$BUILD_NUMBER .'
                 }
             }
         }
