@@ -57,6 +57,15 @@ pipeline {
             }
         }
 
+        stage('Security Scan (Trivy)') {
+            steps {
+                sh 'trivy image --severity HIGH,CRITICAL --no-progress ${DOCKER_HUB_USER}/user-service:${IMAGE_TAG} || true'
+                sh 'trivy image --severity HIGH,CRITICAL --no-progress ${DOCKER_HUB_USER}/product-service:${IMAGE_TAG} || true'
+                sh 'trivy image --severity HIGH,CRITICAL --no-progress ${DOCKER_HUB_USER}/order-service:${IMAGE_TAG} || true'
+                sh 'trivy image --severity HIGH,CRITICAL --no-progress ${DOCKER_HUB_USER}/payment-service:${IMAGE_TAG} || true'
+            }
+        }
+
         stage('Login to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(
@@ -85,7 +94,7 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline succeeded! All 4 images pushed to Docker Hub.'
+            echo 'Pipeline succeeded! All 4 images scanned, built, and pushed.'
         }
         failure {
             echo 'Pipeline failed.'
