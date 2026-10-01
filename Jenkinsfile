@@ -7,37 +7,52 @@ pipeline {
 
     environment {
         DOCKER_HUB_USER = 'shakshigupta20'
-        IMAGE_NAME = "${DOCKER_HUB_USER}/user-service"
         IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                echo '✅ Code checked out'
+                echo 'Code checked out'
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build user-service') {
             steps {
                 dir('user-service') {
                     sh 'npm install'
-                }
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                dir('user-service') {
                     sh 'npm test'
+                    sh 'docker build -t ${DOCKER_HUB_USER}/user-service:${IMAGE_TAG} -t ${DOCKER_HUB_USER}/user-service:latest .'
                 }
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build product-service') {
             steps {
-                dir('user-service') {
-                    sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest .'
+                dir('product-service') {
+                    sh 'npm install'
+                    sh 'npm test'
+                    sh 'docker build -t ${DOCKER_HUB_USER}/product-service:${IMAGE_TAG} -t ${DOCKER_HUB_USER}/product-service:latest .'
+                }
+            }
+        }
+
+        stage('Build order-service') {
+            steps {
+                dir('order-service') {
+                    sh 'npm install'
+                    sh 'npm test'
+                    sh 'docker build -t ${DOCKER_HUB_USER}/order-service:${IMAGE_TAG} -t ${DOCKER_HUB_USER}/order-service:latest .'
+                }
+            }
+        }
+
+        stage('Build payment-service') {
+            steps {
+                dir('payment-service') {
+                    sh 'npm install'
+                    sh 'npm test'
+                    sh 'docker build -t ${DOCKER_HUB_USER}/payment-service:${IMAGE_TAG} -t ${DOCKER_HUB_USER}/payment-service:latest .'
                 }
             }
         }
@@ -54,20 +69,26 @@ pipeline {
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Push All Images') {
             steps {
-                sh 'docker push ${IMAGE_NAME}:${IMAGE_TAG}'
-                sh 'docker push ${IMAGE_NAME}:latest'
+                sh 'docker push ${DOCKER_HUB_USER}/user-service:${IMAGE_TAG}'
+                sh 'docker push ${DOCKER_HUB_USER}/user-service:latest'
+                sh 'docker push ${DOCKER_HUB_USER}/product-service:${IMAGE_TAG}'
+                sh 'docker push ${DOCKER_HUB_USER}/product-service:latest'
+                sh 'docker push ${DOCKER_HUB_USER}/order-service:${IMAGE_TAG}'
+                sh 'docker push ${DOCKER_HUB_USER}/order-service:latest'
+                sh 'docker push ${DOCKER_HUB_USER}/payment-service:${IMAGE_TAG}'
+                sh 'docker push ${DOCKER_HUB_USER}/payment-service:latest'
             }
         }
     }
 
     post {
         success {
-            echo '🎉 Pipeline succeeded! Image pushed to Docker Hub.'
+            echo 'Pipeline succeeded! All 4 images pushed to Docker Hub.'
         }
         failure {
-            echo '❌ Pipeline failed.'
+            echo 'Pipeline failed.'
         }
     }
 }
